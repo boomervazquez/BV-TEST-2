@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Rate Repository Search</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔍</text></svg>">
 <style>
   :root{
     --bg:#f4f4f4; --card:#ffffff; --text:#1f2937; --muted:#6b7280;
@@ -13,18 +14,22 @@
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
   .wrap{max-width:980px;margin:28px auto;padding:0 16px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:20px}
   .title{font-size:clamp(20px,3vw,28px);font-weight:800;color:var(--gray)}
-  .pill{padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--orange);border:1px solid #ffe6d6;font-weight:700;font-size:12px}
-  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.06);border:1px solid #e5e7eb;margin-bottom:12px}
+  .pill{padding:4px 8px;border-radius:999px;background:#fff7ed;color:var(--orange);border:1px solid #ffe6d6;font-weight:700;font-size:10px}
+  .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.06);border:1px solid #e5e7eb;margin-bottom:12px;transition:box-shadow .2s ease}
+  .card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08)}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .row-3{display:grid;grid-template-columns:1.2fr auto auto;gap:10px}
   .stack{display:grid;gap:8px}
   label{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
   input[type="text"], select, button{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:var(--text);outline:none;transition:border .15s, box-shadow .15s}
   input[type="text"]:focus, select:focus{border-color:var(--orange);box-shadow:0 0 0 4px var(--ring)}
-  button{cursor:pointer;background:var(--orange);color:#fff;font-weight:700;border:none}
+  button{cursor:pointer;background:var(--orange);color:#fff;font-weight:700;border:none;transition:background .2s ease}
+  button:hover{background:#e25d0f;transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
   button.secondary{background:#374151}
+  button.secondary:hover{background:#1f2937}
   .hint{font-size:12px;color:var(--muted)}
   .status{font-size:13px}
   .status.ok{color:var(--ok)}
@@ -32,28 +37,34 @@
   .table{width:100%;border-collapse:separate;border-spacing:0 8px}
   .table th{font-size:12px;color:var(--muted);text-align:left;padding:6px 10px}
   .table td{background:#fff;border:1px solid #e5e7eb;border-left:none;border-right:none;padding:10px 10px}
+  .table tbody tr{transition:background .15s ease}
+  .table tbody tr:hover{background:#fafafa}
   .muted{color:var(--muted)}
   .hidden{display:none}
 
   /* custom autocomplete */
   .ac-wrap{position:relative}
   .ac-list{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.08);max-height:260px;overflow:auto;z-index:50}
-  .ac-item{padding:8px 10px;cursor:pointer}
+  .ac-item{padding:8px 10px;cursor:pointer;transition:background .15s ease}
   .ac-item:hover,.ac-item.active{background:#fff7ed}
   .ac-empty{padding:8px 10px;color:#6b7280}
 
   /* dropdown embed */
   details.embed{border:1px solid #e5e7eb;background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
-  details.embed summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:700;color:var(--gray);display:flex;align-items:center;gap:10px}
+  details.embed summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:700;color:var(--gray);display:flex;align-items:center;gap:10px;transition:background .15s ease}
+  details.embed summary:hover{background:#fafafa}
   details.embed summary::before{content:"▸";display:inline-block;transition:transform .2s ease}
   details.embed[open] summary::before{transform:rotate(90deg)}
   .embed-body{padding:0 14px 14px 14px;border-top:1px dashed #e5e7eb}
   .badge-err{display:inline-block;margin-left:8px;padding:2px 8px;border:1px solid #fecaca;border-radius:999px;color:#b91c1c;background:#fff1f2;font-size:12px;font-weight:700}
   iframe{width:100%;height:720px;border:0;border-radius:10px}
 
-/* --- Logo sizing & alignment: minimal, non-breaking --- */
-header .brand{display:flex;align-items:center;gap:12px}
-header .brand img{height:48px;width:auto;object-fit:contain;display:block}
+  /* Logo sizing & alignment: minimal, non-breaking */
+  header .brand{display:flex;align-items:center;gap:12px}
+  header .brand img{height:48px;width:auto;object-fit:contain;display:block}
+  
+  /* Accessibility improvements */
+  *:focus-visible{outline:2px solid var(--orange);outline-offset:2px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -86,8 +97,8 @@ header .brand img{height:48px;width:auto;object-fit:contain;display:block}
         <div id="ac" class="ac-list hidden" role="listbox" aria-label="Suggestions"></div>
         <div class="hint">Case does not matter. punctuation is ignored.</div>
       </div>
-      <div class="stack"><label>&nbsp;</label><button id="search">Search</button></div>
-      <div class="stack"><label>&nbsp;</label><button id="clear" class="secondary">Clear</button></div>
+      <div style="align-self:center"><button id="search">Search</button></div>
+      <div style="align-self:center"><button id="clear" class="secondary">Clear</button></div>
     </div>
     <div class="hint">Shortcuts: Enter to search . Esc to clear</div>
   </section>
@@ -202,7 +213,17 @@ header .brand img{height:48px;width:auto;object-fit:contain;display:block}
     const tbody = document.createElement('tbody');
     rowsOut.slice(0,2000).forEach(r => {
       const tr = document.createElement('tr');
-      headers.forEach((_,i)=>{ const td=document.createElement('td'); td.textContent = (r[i] ?? ''); tr.appendChild(td); });
+      headers.forEach((_,i)=>{ 
+        const td=document.createElement('td'); 
+        const val = r[i] ?? '';
+        // Format Rate column (index 2) as currency
+        if (i === 2 && val && !isNaN(val)) {
+          td.textContent = '$' + parseFloat(val).toFixed(2);
+        } else {
+          td.textContent = val;
+        }
+        tr.appendChild(td); 
+      });
       tbody.appendChild(tr);
     });
     tbl.appendChild(thead); tbl.appendChild(tbody);
@@ -238,6 +259,16 @@ header .brand img{height:48px;width:auto;object-fit:contain;display:block}
   q.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
     if (e.key === 'Escape') { e.preventDefault(); q.value=''; ac.classList.add('hidden'); closeFallback(); }
+  });
+
+  // Reset iframe when fallback details is closed
+  fallback.addEventListener('toggle', () => {
+    if (!fallback.open) {
+      const iframe = document.getElementById('fallbackFrame');
+      if (iframe) {
+        iframe.src = iframe.src; // Reload iframe to reset it
+      }
+    }
   });
 
   // initial
